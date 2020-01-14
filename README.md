@@ -20,8 +20,8 @@ sudo chmod a+rw /dev/ttyUSB0
 ```
 
 ## useful link
-AriaCoda
+AriaCoda  
 https://github.com/reedhedges/AriaCoda
 
-How to use C++ class in python ( SWIG C++/Python: inheritance proxy objects )
+How to use C++ class in python ( SWIG C++/Python: inheritance proxy objects )  
 https://stackoverflow.com/questions/25962662/swig-c-python-inheritance-proxy-objects
