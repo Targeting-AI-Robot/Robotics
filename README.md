@@ -18,3 +18,12 @@ If there is permission error in ttyUSB0 port, run this code.
 ```
 sudo chmod a+rw /dev/ttyUSB0
 ```
+
+## dependencies for this project
+
+geopy - PyPI
+
+Webpage : https://pypi.org/project/geopy/
+```
+pip install geopy
+```
