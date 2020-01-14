@@ -19,15 +19,9 @@ If there is permission error in ttyUSB0 port, run this code.
 sudo chmod a+rw /dev/ttyUSB0
 ```
 
-## dependencies for this project
-
-geopy - PyPI
-
-Webpage : https://pypi.org/project/geopy/
-```
-pip install geopy
-```
-
 ## useful link
 AriaCoda
 https://github.com/reedhedges/AriaCoda
+
+How to use C++ class in python ( SWIG C++/Python: inheritance proxy objects )
+https://stackoverflow.com/questions/25962662/swig-c-python-inheritance-proxy-objects
