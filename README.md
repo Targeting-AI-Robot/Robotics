@@ -25,3 +25,6 @@ https://github.com/reedhedges/AriaCoda
 
 How to use C++ class in python ( SWIG C++/Python: inheritance proxy objects )  
 https://stackoverflow.com/questions/25962662/swig-c-python-inheritance-proxy-objects
+
+RosAria Client  
+https://github.com/pengtang/rosaria_client/blob/master/src/teleop.cpp
