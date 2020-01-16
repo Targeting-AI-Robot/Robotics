@@ -1,5 +1,19 @@
 # -*- coding: cp949 -*-
 from math import sin, acos, cos, pi
+from threading import Thread
+import socket
+
+GPS_list = []
+FLAGS = None
+
+def recv_GPS(ip, port):
+    recv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    recv_socket.bind((ip,port))
+    recv_socket.listen(5)
+    client_socket,_ = recv_socket.accept()
+
+    while True:
+        data = client_socket.recv(65535)
 
 def get_gps():
     x = 0
@@ -37,7 +51,23 @@ def deg2rad(deg):
 def rad2deg(rad):
     return rad * 180 / pi
 
+def main():
+    t = Thread(target=recv_GPS, args=(FLAGS.ip, FLAGS.port))
+    t.daemon = True
+    t.start()
+
+    t.join()
+
 if __name__ == '__main__':
-    print(calDistance(10,0,0,0))
-    print(calDistance(0,1,0,0))
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i','--ip',type=str,default='10.0.0.216')
+    parser.add_argument('-p','--port',type=int,default=9000)
+
+    FLAGS,_ = parser.parse_known_args()
+
+    main()
+#    print(calDistance(10,0,0,0))
+#    print(calDistance(0,1,0,0))
     
