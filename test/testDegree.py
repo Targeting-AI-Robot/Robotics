@@ -9,4 +9,4 @@ def calc_gps(lat1, lon1, lat2, lon2):
 
     return degree
 
-print(calc_gps(3,0,0,3))
+print(calc_gps(1,0,0,1))
