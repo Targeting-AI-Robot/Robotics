@@ -1,82 +1,155 @@
-"""
-Adept MobileRobots Robotics Interface for Applications (ARIA)
-Copyright (C) 2004-2005 ActivMedia Robotics LLC
-Copyright (C) 2006-2010 MobileRobots Inc.
-Copyright (C) 2011-2015 Adept Technology, Inc.
-Copyright (C) 2016-2018 Omron Adept Technologies, Inc.
-
-     This program is free software; you can redistribute it and/or modify
-     it under the terms of the GNU General Public License as published by
-     the Free Software Foundation; either version 2 of the License, or
-     (at your option) any later version.
-
-     This program is distributed in the hope that it will be useful,
-     but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     GNU General Public License for more details.
-
-     You should have received a copy of the GNU General Public License
-     along with this program; if not, write to the Free Software
-     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-If you wish to redistribute ARIA under different terms, contact 
-Adept MobileRobots for information about a commercial version of ARIA at 
-robots@mobilerobots.com or 
-Adept MobileRobots, 10 Columbia Drive, Amherst, NH 03031; +1-603-881-7960
-"""
-
+from __future__ import division
 from AriaPy import *
 import sys
+from time import sleep
+from utils import get_gps
 
+##############
+# initalize  #
+##############
 
-robot = Aria.connectToRobot()
+class PyTime(ArTime):
+    def __init__(self):
+        super(PyTime, self).__init__()
 
-print('Running...')
-robot.enableMotors()
-robot.runAsync()
+class PyPose(ArPose):
+    def __init__(self):
+        super(PyPose, self).__init__()
+
+print "STEP 1" 
+Aria.init()
+parser = ArArgumentParser(sys.argv)
+parser.loadDefaultArguments()
+robot = ArRobot()
+conn = ArRobotConnector(parser, robot)
+laserCon = ArLaserConnector(parser, robot, conn)
+
+if not conn.connectRobot(robot):
+    print 'Error connecting to robot'
+    Aria.logOptions()
+    print 'Could not connect to robot, exiting.'
+    Aria.exit(1)
+
+print "STEP 2"
+sonar = ArSonarDevice()
+robot.addRangeDevice(sonar)
+robot.runAsync(True)
+
+if not Aria_parseArgs():
+    Aria.logOptions()
+    Aria.exit(2)
+  
+
+print 'Connecting to laser and waiting 1 sec...'
+laser = None
+if(laserCon.connectLasers()):
+    print 'Connected to lasers as configured in parameters'
+    laser = robot.findLaser(1)
+else:
+    print 'Warning: unable to connect to lasers. Continuing anyway!'
 
 def printRobotPos():
-  print(robot.getPose())
+    print(robot.getPose())
 
 robot.addSensorInterpTask(printRobotPos)
 
-# Drive the robot in a circle by requesting
-# Constant rotation and forward velocity 
-# components.
-def driveRobot():
-  print('driving forward 200mm/s, turn 15 deg/s')
-  robot.setVel(-350)   # forward mm/s
-  robot.setRotVel(-5) # turn deg/s
+print "STEP 3"
+limiter = ArActionLimiterForwards("speed limiter near", 300, 600, 250)
+limiterFar = ArActionLimiterForwards("speed limiter far", 300, 1100, 400)
+tableLimiter = ArActionLimiterTableSensor()
+
+print "STEP 4"
+robot.addAction(tableLimiter, 100)
+robot.addAction(limiter, 95)
+robot.addAction(limiterFar, 90)
+
+print "STEP 5"
+gotoPoseAction = ArActionGotoStraight("gotostraight")
+robot.addAction(gotoPoseAction, 50)
+
+stop = ArActionStop("stop")
+robot.addAction(stop, 40)
+
+print "STEP 6"
+robot.enableMotors()
+robot.comInt(ArCommands.SOUNDTOG, 0)
+duration = 30000
+
+print "STEP 7"
+first = True
+goalNum = 0
+start = PyTime()
+start.setToNow()
 
 
-robot.addUserTask(driveRobot, 'drive')
+##############
+# globar var #
+##############
+
+GPS_list = []
+# TODO robot_state  
+
+################
+# init for GPS #
+################
+
+dx, dy = get_GPS()
 
 
-# After 5 seconds, replace the user task with a new one.  In Python, you can
-# define a new function with the same name. The old function still exists, and
-# ArRobot will continue to call it.  So use replaceUserTask() to remove the old
-# task named 'drive' and then add the new task named 'drive' which will call the
-# new function.  (You can use this in an interactive Python environment such as
-# Jupyter, the Python interpreter, or an IDE such as Idle.)
-ArUtil.sleep(15000);
+##############
+#    main    #
+##############
 
-def driveRobot():
-  print 'drive redefined. stopping robot.'
-  robot.setVel(-300)
-  robot.setRotVel(0)
+dx dy mx my
+pose = (x+dx) * mx 
 
-robot.replaceUserTask(driveRobot, 'drive')
-ArUtil.sleep(3000);
+print "STEP 8"
+while Aria.getRunning():
+    robot.lock()
 
-def driveRobot():
-  print 'drive redefined. stopping robot.'
-  robot.setVel(0)
-  robot.setRotVel(0)
+    while not GPS_list:
+        sleep(0.1)
+    
 
-robot.replaceUserTask(driveRobot, 'drive')
 
-print 'Press CTRL-C to exit'
-robot.waitForRunExit()
+    
+    pose = PyPose()
+    if first or gotoPoseAction.haveAchievedGoal():
+        first = False
+        goalNum += 1
+	print("running now...")
 
-print('Exiting.')
+        if goalNum > 4:
+            goalNum = 1
+            break
+        if goalNum == 1:
+            pose.setPose(0, 0, 0)
+            gotoPoseAction.setGoal(pose)
+	    print "POSE......(0, 0, 0)"
+            #gotoPoseAction.setGoal(pose.setPose(0, 0, 0))
+        elif goalNum == 2:
+            pose.setPose(1000, 0, 0)
+            gotoPoseAction.setGoal(pose)
+	    print "POSE......(2500, 0, 0)"
+            #gotoPoseAction.setGoal(pose.setPose(2500, 0, 0))
+        elif goalNum == 3:
+            pose.setPose(1000, 1000, 0)
+            gotoPoseAction.setGoal(pose)
+            print "POSE......(2500, 2500, 0)"
+            #gotoPoseAction.setGoal(pose.setPose(2500, 2500, 0))
+        elif goalNum == 4:
+            pose.setPose(1000, 1000, 0)
+            gotoPoseAction.setGoal(pose)
+	    print "POSE......(0, 2500, 0)"
+            #gotoPoseAction.setGoal(pose.setPose(2500, 2500, 0))
+
+    robot.unlock()
+    ArUtil.sleep(500)
+
+    if start.mSecSince() >= duration:
+        gotoPoseAction.cancelGoal()
+        robot.unlock()
+        ArUtil.sleep(3000)
+        break
+
 Aria.exit(0)
