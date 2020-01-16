@@ -16,10 +16,23 @@ def recv_GPS(ip, port):
         data = client_socket.recv(65535)
 
 def get_gps():
-    x = 0
-    y = 0
     # gps 계산해서 리턴
-    return x, y
+    path = "./CSV"
+    file_list = os.listdir(path)
+    file_list.sort()
+
+    lon = 0
+    lat = 0
+    for index in range(0, 2):
+        f = open("./CSV/" + file_list[index], 'r')
+        lines = csv.reader(f)
+        for line in lines:
+            lon += float(line[1])
+            lat += float(line[2])
+        f.close()
+    lon = lon / 90
+    lat = lat / 90
+    return lon, lat
 
 # http://egloos.zum.com/metashower/v/313035
 # https://lovestudycom.tistory.com/entry/%EC%9C%84%EB%8F%84-%EA%B2%BD%EB%8F%84-%EA%B3%84%EC%82%B0%EB%B2%95
