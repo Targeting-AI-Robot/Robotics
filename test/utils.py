@@ -1,5 +1,5 @@
 # -*- coding: cp949 -*-
-from math import sin, acos, cos, pi
+from math import sin, acos, cos, pi, atan2, sqrt
 from threading import Thread
 import socket
 import os
@@ -51,14 +51,15 @@ def calc_gps(lat1, lon1, lat2, lon2):
     dist = dist * 60 * 1.1515
     dist = dist * 1.609344 
     dist = dist * 1000.0
-    #print(dist)
-    #print(cos(lat1))
-    #print((cos(lat1)*sin(dist)))    
-    # radian
-    theta = acos((sin(lat2)-sin(lat1)*cos(dist))/(cos(lat1)*sin(dist)))*(180/pi)
-  
-    return dist, theta  
-  
+
+    # 0 ~ 360 degree
+    dLon = lon2 - lon1
+    y = sin(dLon) * cos(lat2)
+    x = cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(dLon)
+    brng = (rad2deg(atan2(y, x)) + 360) % 360 
+
+    return dist, brng
+
 def deg2rad(deg):
     return deg * pi / 180  
 
@@ -74,15 +75,10 @@ def main():
     t.join()
 
 if __name__ == '__main__':
-    import argparse
+    print(calc_gps(52.2296756,21.0122287,52.406374,16.9251681))
+    print(calc_gps(-41.32, 174.81, 40.96, -5.50))
+    print(get_bearing1(-41.32, 174.81, 40.96, -5.50))
+    print(get_bearing2(-41.32, 174.81, 40.96, -5.50))
+    print(get_bearing3(-41.32, 174.81, 40.96, -5.50))
+    print(get_bearing4(-41.32, 174.81, 40.96, -5.50))
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i','--ip',type=str,default='10.0.0.216')
-    parser.add_argument('-p','--port',type=int,default=9000)
-
-    FLAGS,_ = parser.parse_known_args()
-
-    main()
-#    print(calDistance(10,0,0,0))
-#    print(calDistance(0,1,0,0))
-    
