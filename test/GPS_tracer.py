@@ -2,7 +2,7 @@ from __future__ import division
 from AriaPy import *
 import sys
 from time import sleep
-from utils import get_gps, distance_gps, degree_gps
+from utils import get_gps, calc_gps
 
 ##############
 # initalize  #
@@ -85,7 +85,7 @@ start.setToNow()
 # globar var #
 ##############
 
-GPS_list = []
+GPS_list = [(500,0),(1000,0),(0,500)]
 # TODO robot_state  
 
 ################
@@ -100,36 +100,56 @@ sy = None
 ##############
 
 # num of adjustment
-goal_num = 1
-
+goal_num = 2
+first = True
 print "STEP 8"
-while Aria.getRunning():
-    robot.lock()
-    # sleep while there is no gps to go or robot is moving
-    while not GPS_list or not gotoPoseAction.haveAchievedGoal():
-        sleep(0.1)
+try: 
+    while Aria.getRunning():
+        print("start loop")
+        robot.lock()
+        # sleep while there is no gps to go or robot is moving
+        while not first and not gotoPoseAction.haveAchievedGoal():
+            print("achieved",gotoPoseAction.haveAchievedGoal())
+            print("pose",robot.getX(),robot.getY())
+            ArUtil.sleep(100)
 
-    sx, sy, cur_theta = get_GPS()
-    ex, ey = GPS_list.pop(0)
-    dist, dtheta = calc_gps(sx, sy, ex, ey)
+        while not GPS_list:
+            ArUtil.sleep(100)
+    
+        first = False
+        sx, sy, cur_theta = get_gps()
+        ex, ey = GPS_list.pop(0)
+        print(type(ex),ex)
+        print(type(ey),ey)
+
+        #dist, dtheta = calc_gps(sx, sy, ex, ey)
         
-    robot.setPose(0,0,0)
-    pose = PyPose()
-    print("running now...")
+        #robot.setPose(0,0,0)
+        pose = PyPose()
+        print("running now...")
     
-    pose.setPose(1000, 0, 0)
-    
-    count = 0
-    while True:
-        if not gotoPoseAction.haveAchievedGoal():
-            sleep(0.1)
-        count += 1
-        gotoPoseAction.setGoal(pose)
-        if count == goal_num:
-            break
-    
-    robot.unlock()
-    ArUtil.sleep(500)
+        pose.setPose(ex, ey)
+        #sleep(10000)
+        count = 0
+        while True:
+            count += 1
+            
+            gotoPoseAction.setGoal(pose)
+            print("sleep")
+            robot.unlock()
+            while not gotoPoseAction.haveAchievedGoal():
+                ArUtil.sleep(100)
+                print(robot.getX(), robot.getY(), gotoPoseAction.haveAchievedGoal())
+            robot.lock()
+            if count == goal_num:
+                break
+            
+        robot.unlock()
+        ArUtil.sleep(500)
+        print("end one loop")
+
+except:
+    Aria.exit(0)
 
 
 Aria.exit(0)

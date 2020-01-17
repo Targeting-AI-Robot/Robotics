@@ -79,12 +79,13 @@ print "STEP 8"
 while Aria.getRunning():
     robot.lock()
     pose = PyPose()
+    print("goal",gotoPoseAction.haveAchievedGoal())
     if first or gotoPoseAction.haveAchievedGoal():
         first = False
         goalNum += 1
 	print("running now...")
 
-        if goalNum > 4:
+        if goalNum > 2:
             goalNum = 1
             break
         if goalNum == 1:
