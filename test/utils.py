@@ -2,6 +2,8 @@
 from math import sin, acos, cos, pi
 from threading import Thread
 import socket
+import os
+import csv
 
 GPS_list = []
 FLAGS = None
@@ -16,23 +18,25 @@ def recv_GPS(ip, port):
         data = client_socket.recv(65535)
 
 def get_gps():
-    # gps 계산해서 리턴
-    path = "./CSV"
-    file_list = os.listdir(path)
-    file_list.sort()
-
+    path = "/home/lee/gps/data/" # fix path
+    file_list = os.listdir(path) # get file list
+    if(len(file_list)<13): # lack of gps data
+        return None,None # return None
+    file_list.sort()# find oldest file
     lon = 0
     lat = 0
-    for index in range(0, 2):
-        f = open("./CSV/" + file_list[index], 'r')
+    for name in file_list[4:]: # get lon,lat value each file and sum
+        f = open("data/" +name, 'r')
         lines = csv.reader(f)
         for line in lines:
             lon += float(line[1])
             lat += float(line[2])
         f.close()
-    lon = lon / 90
-    lat = lat / 90
-    return lon, lat
+    lon = lon / len(file_list[4:])
+    lat = lat / len(file_list[4:])
+    return lon, lat #get avg gps data
+
+    
 
 # http://egloos.zum.com/metashower/v/313035
 # https://lovestudycom.tistory.com/entry/%EC%9C%84%EB%8F%84-%EA%B2%BD%EB%8F%84-%EA%B3%84%EC%82%B0%EB%B2%95
