@@ -85,7 +85,7 @@ while Aria.getRunning():
         goalNum += 1
 	print("running now...")
 
-        if goalNum > 2:
+        if goalNum > 4:
             goalNum = 1
             break
         if goalNum == 1:

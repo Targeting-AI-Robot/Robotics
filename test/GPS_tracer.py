@@ -1,8 +1,12 @@
 from __future__ import division
 from AriaPy import *
 import sys
+import socket
+import argparse
 from time import sleep
 from utils import get_gps, calc_gps
+from threading import Thread
+import Queue
 
 ##############
 # initalize  #
@@ -16,140 +20,195 @@ class PyPose(ArPose):
     def __init__(self):
         super(PyPose, self).__init__()
 
-print "STEP 1" 
-Aria.init()
-parser = ArArgumentParser(sys.argv)
-parser.loadDefaultArguments()
-robot = ArRobot()
-conn = ArRobotConnector(parser, robot)
-laserCon = ArLaserConnector(parser, robot, conn)
+####################
+# global variables #
+####################
 
-if not conn.connectRobot(robot):
-    print 'Error connecting to robot'
-    Aria.logOptions()
-    print 'Could not connect to robot, exiting.'
-    Aria.exit(1)
+robot = None
+FLAGS = None
+# GPS_list = Queue.Queue()
 
-print "STEP 2"
-sonar = ArSonarDevice()
-robot.addRangeDevice(sonar)
-robot.runAsync(True)
-
-if not Aria_parseArgs():
-    Aria.logOptions()
-    Aria.exit(2)
-  
-
-print 'Connecting to laser and waiting 1 sec...'
-laser = None
-if(laserCon.connectLasers()):
-    print 'Connected to lasers as configured in parameters'
-    laser = robot.findLaser(1)
-else:
-    print 'Warning: unable to connect to lasers. Continuing anyway!'
-
-def printRobotPos():
-    print(robot.getPose())
-
-robot.addSensorInterpTask(printRobotPos)
-
-print "STEP 3"
-limiter = ArActionLimiterForwards("speed limiter near", 300, 600, 250)
-limiterFar = ArActionLimiterForwards("speed limiter far", 300, 1100, 400)
-tableLimiter = ArActionLimiterTableSensor()
-
-print "STEP 4"
-robot.addAction(tableLimiter, 100)
-robot.addAction(limiter, 95)
-robot.addAction(limiterFar, 90)
-
-print "STEP 5"
-gotoPoseAction = ArActionGotoStraight("gotostraight")
-robot.addAction(gotoPoseAction, 50)
-
-stop = ArActionStop("stop")
-robot.addAction(stop, 40)
-
-print "STEP 6"
-robot.enableMotors()
-robot.comInt(ArCommands.SOUNDTOG, 0)
-duration = 30000
-
-print "STEP 7"
-goalNum = 0
-start = PyTime()
-start.setToNow()
-
-
-##############
-# globar var #
-##############
-
-GPS_list = [(500,0),(1000,0),(0,500)]
 # TODO robot_state  
 
 ################
 # init for GPS #
 ################
 
-sx = None
-sy = None
+# Are you using these, Mr.Lee?
+# sx = None
+# sy = None
 
-##############
-#    main    #
-##############
+####################
+# define functions #
+####################
 
-# num of adjustment
-goal_num = 2
-first = True
-print "STEP 8"
-try: 
-    while Aria.getRunning():
-        print("start loop")
-        robot.lock()
-        # sleep while there is no gps to go or robot is moving
-        while not first and not gotoPoseAction.haveAchievedGoal():
-            print("achieved",gotoPoseAction.haveAchievedGoal())
-            print("pose",robot.getX(),robot.getY())
-            ArUtil.sleep(100)
+def printRobotPos():
+    print(robot.getPose())
 
-        while not GPS_list:
-            ArUtil.sleep(100)
-    
-        first = False
-        sx, sy, cur_theta = get_gps()
-        ex, ey = GPS_list.pop(0)
-        print(type(ex),ex)
-        print(type(ey),ey)
+def recv_gps(GPS_list):
+    recv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    recv_socket.bind((FLAGS.ip,FLAGS.port))
+    recv_socket.listen(5)
+    client_socket,_ = recv_socket.accept()
 
-        #dist, dtheta = calc_gps(sx, sy, ex, ey)
-        
-        #robot.setPose(0,0,0)
-        pose = PyPose()
-        print("running now...")
-    
-        pose.setPose(ex, ey)
-        #sleep(10000)
-        count = 0
-        while True:
-            count += 1
-            
-            gotoPoseAction.setGoal(pose)
-            print("sleep")
-            robot.unlock()
-            while not gotoPoseAction.haveAchievedGoal():
-                ArUtil.sleep(100)
-                print(robot.getX(), robot.getY(), gotoPoseAction.haveAchievedGoal())
+    while True:
+        data = client_socket.recv(1024)
+        ex, ey = data.decode().split()
+        print("##################recv packet",(float(ex),float(ey)))
+        GPS_list.put((float(ex),float(ey)))
+        sleep(0.1)
+        GPS_list.task_done()
+
+########
+# Main #
+########
+
+if __name__ == '__main__':
+    GPS_list = Queue.Queue()    
+    GPS_list.put((500,0))
+    GPS_list.put((1000,0))
+    GPS_list.put((500,500))
+
+
+    ####################
+    # Start GPS Thread #
+    ####################
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i','--ip',type=str,default='10.0.0.216')
+    parser.add_argument('-p','--port',type=int,default=9000)
+    FLAGS,_ = parser.parse_known_args()
+
+    receiving_gps = Thread(target=recv_gps, args=(GPS_list,))
+    receiving_gps.start()
+
+    ##################
+    # Robot Movement #
+    ##################
+
+    Aria.init()
+    parser = ArArgumentParser(sys.argv)
+    parser.loadDefaultArguments()
+    robot = ArRobot()
+    conn = ArRobotConnector(parser, robot)
+    laserCon = ArLaserConnector(parser, robot, conn)
+
+    if not conn.connectRobot(robot):
+        print 'Error connecting to robot'
+        Aria.logOptions()
+        print 'Could not connect to robot, exiting.'
+        Aria.exit(1)
+
+    sonar = ArSonarDevice()
+    robot.addSensorInterpTask(printRobotPos)
+    robot.addRangeDevice(sonar)
+    robot.runAsync(True)
+
+    if not Aria_parseArgs():
+        Aria.logOptions()
+        Aria.exit(2)
+  
+
+    print 'Connecting to laser and waiting 1 sec...'
+    laser = None
+    if(laserCon.connectLasers()):
+        print 'Connected to lasers as configured in parameters'
+        laser = robot.findLaser(1)
+    else:
+        print 'Warning: unable to connect to lasers. Continuing anyway!'
+
+
+
+    limiter = ArActionLimiterForwards("speed limiter near", 300, 600, 250)
+    limiterFar = ArActionLimiterForwards("speed limiter far", 300, 1100, 400)
+    tableLimiter = ArActionLimiterTableSensor()
+
+    robot.addAction(tableLimiter, 100)
+    robot.addAction(limiter, 95)
+    robot.addAction(limiterFar, 90)
+
+    gotoPoseAction = ArActionGotoStraight("gotostraight")
+    robot.addAction(gotoPoseAction, 50)
+
+    stop = ArActionStop("stop")
+    robot.addAction(stop, 40)
+
+    robot.enableMotors()
+    robot.comInt(ArCommands.SOUNDTOG, 0)
+    duration = 30000
+
+    goalNum = 0
+    start = PyTime()
+    start.setToNow()
+
+    # num of adjustment
+    goal_num = 2
+    # GPS_list.put((500.0, 0.0))
+    # GPS_list.put((0.0, 500.0))
+    # GPS_list.put((500.0, 500.0))
+    # GPS_list.put((0.0, 0.0))
+
+    try: 
+        while Aria.getRunning():
+            print("start loop")
             robot.lock()
-            if count == goal_num:
-                break
+            # sleep while there is no gps to go or robot is moving
+            print("robot has achieved")
+            print("GPS empty?",GPS_list.empty())
+
+            while GPS_list.empty():
+                pass
+                ArUtil.sleep(100)
+
+            print("GPS list is not empty")
+            first = False
+            # sx, sy, cur_theta = get_gps()
+            ex, ey = GPS_list.get()
+            print(type(ex),ex)
+            print(type(ey),ey)
+
+            #dist, dtheta = calc_gps(sx, sy, ex, ey)
+        
+            #robot.setPose(0,0,0)
+            pose = PyPose()
+            pose.setPose(ex, ey)
+            #sleep(10000)
+
+            print("running now")
+            count = 0
             
-        robot.unlock()
-        ArUtil.sleep(500)
-        print("end one loop")
+            first = True
+            robot.unlock()
+            while True:
+                robot.lock()
+                print("if boolean:",first, gotoPoseAction.haveAchievedGoal())
+                if first or gotoPoseAction.haveAchievedGoal():
+                    if count == goal_num:
+                        break
 
-except:
+                    first = False
+                    print("run count", count)
+                    count += 1
+            
+                    print("achieved:",gotoPoseAction.haveAchievedGoal())
+                    print("pose",robot.getX(),robot.getY())
+                    print("set goal of robot",pose.getX(), pose.getY())
+                    gotoPoseAction.setGoal(pose)
+                    
+                
+                # gotoPoseAction.setGoal(pose)
+                print("unlock robot")
+                   
+                robot.unlock()
+                ArUtil.sleep(500)
+            robot.unlock()
+            ArUtil.sleep(100)
+            print("end one loop")
+
+    except:
+        Aria.exit(0)
+
+    receiving_gps.join()
+    GPS_list.join()
+
     Aria.exit(0)
-
-
-Aria.exit(0)
