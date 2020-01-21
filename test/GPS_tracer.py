@@ -2,7 +2,7 @@ from __future__ import division
 from AriaPy import *
 import sys
 from time import sleep
-from utils import get_gps, calc_gps
+from utils import get_gps, calc_gps, gps2pose, get_gps
 
 ##############
 # initalize  #
@@ -101,6 +101,7 @@ sy = None
 
 # num of adjustment
 goal_num = 2
+gps_mode = False
 first = True
 print "STEP 8"
 try: 
@@ -117,8 +118,8 @@ try:
             ArUtil.sleep(100)
     
         first = False
-        sx, sy, cur_theta = get_gps()
-        ex, ey = GPS_list.pop(0)
+        lat1, lon2, base_heading = get_gps()
+        lat2, lon2 = GPS_list.pop(0)
         print(type(ex),ex)
         print(type(ey),ey)
 
@@ -127,7 +128,12 @@ try:
         #robot.setPose(0,0,0)
         pose = PyPose()
         print("running now...")
-    
+        if gps_mode:
+            lat1, lon1 = get_gps()
+            ex, ey = gps2pose(lat1, lon1, lat2, lon2, base_heading)
+        else:
+            ex, ey = lat2, lon2
+            
         pose.setPose(ex, ey)
         #sleep(10000)
         count = 0
