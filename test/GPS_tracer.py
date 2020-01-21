@@ -4,7 +4,7 @@ import sys
 import socket
 import argparse
 from time import sleep
-from utils import get_gps, calc_gps
+from utils import get_gps, calc_gps, gps2pose, get_gps
 from threading import Thread
 import Queue
 
@@ -28,7 +28,10 @@ robot = None
 FLAGS = None
 GPS_list = Queue.Queue()
 
-# TODO robot_state  
+# TODO : Make this var to parameter
+goal_num = 2
+gps_mode = False
+
 
 ################
 # init for GPS #
@@ -130,8 +133,6 @@ if __name__ == '__main__':
     start = PyTime()
     start.setToNow()
 
-    # num of adjustment
-    goal_num = 2
 
     try: 
         while Aria.getRunning():
@@ -148,10 +149,15 @@ if __name__ == '__main__':
             print("GPS list is not empty")
             first = False
             # sx, sy, cur_theta = get_gps()
-            ex, ey = GPS_list.get()
-            print(type(ex),ex)
-            print(type(ey),ey)
+            lat2, lon2 = GPS_list.get()
 
+            if gps_mode:	# TODO robot_state  
+                lat1, lon1, base_heading = get_gps()	
+                ex, ey = gps2pose(lat1, lon1, lat2, lon2, base_heading)	
+            else:	
+                ex, ey = lat2, lon2	
+                pose.setPose(ex, ey)
+                
             #dist, dtheta = calc_gps(sx, sy, ex, ey)
         
             pose = PyPose()
