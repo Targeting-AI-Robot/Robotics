@@ -3,10 +3,10 @@ from AriaPy import *
 import sys
 import socket
 import argparse
-from utils import get_gps, calc_gps, gps2pose, get_gps
+from time import sleep
+from utils import get_gps, calc_gps
 from threading import Thread
 import Queue
-
 
 ##############
 # initalize  #
@@ -132,9 +132,7 @@ if __name__ == '__main__':
 
     # num of adjustment
     goal_num = 2
-    gps_mode = False
-    first = True
-    print "STEP 8"
+
     try: 
         while Aria.getRunning():
             print("start loop")
@@ -149,21 +147,15 @@ if __name__ == '__main__':
 
             print("GPS list is not empty")
             first = False
-            lat2, lon2 = GPS_list.pop(0)
+            # sx, sy, cur_theta = get_gps()
+            ex, ey = GPS_list.get()
             print(type(ex),ex)
             print(type(ey),ey)
 
             #dist, dtheta = calc_gps(sx, sy, ex, ey)
-            
-            #robot.setPose(0,0,0)
+        
             pose = PyPose()
-            print("running now...")
-            if gps_mode:
-                lat1, lon1, base_heading = get_gps()
-                ex, ey = gps2pose(lat1, lon1, lat2, lon2, base_heading)
-            else:
-                ex, ey = lat2, lon2
-                pose.setPose(ex, ey)
+            pose.setPose(ex, ey)
 
             print("running now")
             count = 0

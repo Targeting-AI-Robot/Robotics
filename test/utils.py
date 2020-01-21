@@ -1,9 +1,24 @@
+# -*- coding: cp949 -*-
 from math import sin, acos, cos, pi, atan2, sqrt
+from threading import Thread
+import socket
 import os
 import csv
 
+GPS_list = []
+FLAGS = None
+
+def recv_GPS(ip, port):
+    recv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    recv_socket.bind((ip,port))
+    recv_socket.listen(5)
+    client_socket,_ = recv_socket.accept()
+
+    while True:
+        data = client_socket.recv(65535)
+
 def get_gps():
-    path = "./data/" # fix path
+    path = "/home/lee/gps/data/" # fix path
     file_list = os.listdir(path) # get file list
     if(len(file_list)<13): # lack of gps data
         return None,None # return None
@@ -19,7 +34,7 @@ def get_gps():
         f.close()
     lon = lon / len(file_list[4:])
     lat = lat / len(file_list[4:])
-    return lat, lon  #get avg gps data
+    return lon, lat #get avg gps data
 
 # http://egloos.zum.com/metashower/v/313035
 # https://lovestudycom.tistory.com/entry/%EC%9C%84%EB%8F%84-%EA%B2%BD%EB%8F%84-%EA%B3%84%EC%82%B0%EB%B2%95
@@ -52,17 +67,18 @@ def deg2rad(deg):
 def rad2deg(rad):
     return rad * 180 / pi
 
-def gps2pose(lat1, lon1, lat2, lon2, base_heading):
-    dist, heading = calc_gps(lat1, lon1, lat2, lon2)
-    print("dist",dist)
-    theta = heading - base_heading
-    theta = deg2rad(theta)
-    pose = (dist*cos(theta), -dist*sin(theta))
-    return pose
-    
+def main():
+    t = Thread(target=recv_GPS, args=(FLAGS.ip, FLAGS.port))
+    t.daemon = True
+    t.start()
+
+    t.join()
 
 if __name__ == '__main__':
-    #print(calc_gps(52.2296756,21.0122287,52.406374,16.9251681))
-    #print(calc_gps(-41.32, 174.81, 40.96, -5.50))
- 
-    print(gps2pose(0.0, 0.0, 0.0, 1.0, 0))
+    print(calc_gps(52.2296756,21.0122287,52.406374,16.9251681))
+    print(calc_gps(-41.32, 174.81, 40.96, -5.50))
+    print(get_bearing1(-41.32, 174.81, 40.96, -5.50))
+    print(get_bearing2(-41.32, 174.81, 40.96, -5.50))
+    print(get_bearing3(-41.32, 174.81, 40.96, -5.50))
+    print(get_bearing4(-41.32, 174.81, 40.96, -5.50))
+
