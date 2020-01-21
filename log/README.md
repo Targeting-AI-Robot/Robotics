@@ -12,6 +12,10 @@
  파이썬 코드가 모자라서 c++ 코드를 기반으로 transform 테스트  
 ### 0116
  파이썬으로 gotoActionExample를 작성하여 원하는 pose로 갈 수 있도록 돌림
+ 
+### 0121
+ Thread 
+ 
 ### 지금까지 한일
  GPS 잡음  
  wifi 연결됨
