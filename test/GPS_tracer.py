@@ -26,7 +26,7 @@ class PyPose(ArPose):
 
 robot = None
 FLAGS = None
-# GPS_list = Queue.Queue()
+GPS_list = Queue.Queue()
 
 # TODO robot_state  
 
@@ -45,7 +45,7 @@ FLAGS = None
 def printRobotPos():
     print(robot.getPose())
 
-def recv_gps(GPS_list):
+def recv_gps():
     recv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     recv_socket.bind((FLAGS.ip,FLAGS.port))
     recv_socket.listen(5)
@@ -54,22 +54,14 @@ def recv_gps(GPS_list):
     while True:
         data = client_socket.recv(1024)
         ex, ey = data.decode().split()
-        print("##################recv packet",(float(ex),float(ey)))
+        print("##################recv packet :",(float(ex),float(ey)))
         GPS_list.put((float(ex),float(ey)))
-        sleep(0.1)
-        GPS_list.task_done()
 
 ########
 # Main #
 ########
 
 if __name__ == '__main__':
-    GPS_list = Queue.Queue()    
-    GPS_list.put((500,0))
-    GPS_list.put((1000,0))
-    GPS_list.put((500,500))
-
-
     ####################
     # Start GPS Thread #
     ####################
@@ -79,7 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('-p','--port',type=int,default=9000)
     FLAGS,_ = parser.parse_known_args()
 
-    receiving_gps = Thread(target=recv_gps, args=(GPS_list,))
+    receiving_gps = Thread(target=recv_gps)
     receiving_gps.start()
 
     ##################
@@ -117,8 +109,6 @@ if __name__ == '__main__':
     else:
         print 'Warning: unable to connect to lasers. Continuing anyway!'
 
-
-
     limiter = ArActionLimiterForwards("speed limiter near", 300, 600, 250)
     limiterFar = ArActionLimiterForwards("speed limiter far", 300, 1100, 400)
     tableLimiter = ArActionLimiterTableSensor()
@@ -137,16 +127,11 @@ if __name__ == '__main__':
     robot.comInt(ArCommands.SOUNDTOG, 0)
     duration = 30000
 
-    goalNum = 0
     start = PyTime()
     start.setToNow()
 
     # num of adjustment
     goal_num = 2
-    # GPS_list.put((500.0, 0.0))
-    # GPS_list.put((0.0, 500.0))
-    # GPS_list.put((500.0, 500.0))
-    # GPS_list.put((0.0, 0.0))
 
     try: 
         while Aria.getRunning():
@@ -169,16 +154,15 @@ if __name__ == '__main__':
 
             #dist, dtheta = calc_gps(sx, sy, ex, ey)
         
-            #robot.setPose(0,0,0)
             pose = PyPose()
             pose.setPose(ex, ey)
-            #sleep(10000)
 
             print("running now")
             count = 0
             
             first = True
             robot.unlock()
+
             while True:
                 robot.lock()
                 print("if boolean:",first, gotoPoseAction.haveAchievedGoal())
@@ -195,12 +179,10 @@ if __name__ == '__main__':
                     print("set goal of robot",pose.getX(), pose.getY())
                     gotoPoseAction.setGoal(pose)
                     
-                
-                # gotoPoseAction.setGoal(pose)
                 print("unlock robot")
-                   
                 robot.unlock()
                 ArUtil.sleep(500)
+
             robot.unlock()
             ArUtil.sleep(100)
             print("end one loop")
