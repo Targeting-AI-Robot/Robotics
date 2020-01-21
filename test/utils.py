@@ -1,12 +1,9 @@
-# -*- coding: cp949 -*-
 from math import sin, acos, cos, pi, atan2, sqrt
 from threading import Thread
 import socket
 import os
 import csv
 
-GPS_list = []
-FLAGS = None
 
 def recv_GPS(ip, port):
     recv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -18,7 +15,7 @@ def recv_GPS(ip, port):
         data = client_socket.recv(65535)
 
 def get_gps():
-    path = "/home/lee/gps/data/" # fix path
+    path = "./data/" # fix path
     file_list = os.listdir(path) # get file list
     if(len(file_list)<13): # lack of gps data
         return None,None # return None
@@ -73,6 +70,15 @@ def main():
     t.start()
 
     t.join()
+
+def gps2pose(lat1, lon1, lat2, lon2, base_heading):
+    dist, heading = calc_gps(lat1, lon1, lat2, lon2)
+    print("dist",dist)
+    theta = heading - base_heading
+
+    theta = deg2rad(theta)
+    pose = (dist*cos(theta), -dist*sin(theta))
+    return pose
 
 if __name__ == '__main__':
     print(calc_gps(52.2296756,21.0122287,52.406374,16.9251681))
