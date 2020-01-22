@@ -77,14 +77,10 @@ def gps2pose(lat1, lon1, lat2, lon2, base_heading):
     theta = heading - base_heading
 
     theta = deg2rad(theta)
-    pose = (dist*cos(theta), -dist*sin(theta))
+    # meter to millimeter
+    pose = (1000*dist*cos(theta), -1000*dist*sin(theta))
     return pose
 
-if __name__ == '__main__':
-    print(calc_gps(52.2296756,21.0122287,52.406374,16.9251681))
-    print(calc_gps(-41.32, 174.81, 40.96, -5.50))
-    print(get_bearing1(-41.32, 174.81, 40.96, -5.50))
-    print(get_bearing2(-41.32, 174.81, 40.96, -5.50))
-    print(get_bearing3(-41.32, 174.81, 40.96, -5.50))
-    print(get_bearing4(-41.32, 174.81, 40.96, -5.50))
 
+if __name__ == '__main__':
+    print(gps2pose(0, 0, 1, 0, 0))
