@@ -7,24 +7,38 @@ roscore
 ```
 Open another termial and run python program.
 ```
-python2 simple.py -robotPort /dev/ttyUSB0
+python2 GPS_tracer.py -robotPort /dev/ttyUSB0
 ```
 or
 ```
-python simple.py -robotPort /dev/ttyUSB0
+python GPS_tracer.py -robotPort /dev/ttyUSB0
 ```
 
 If there is permission error in ttyUSB0 port, run this code.
 ```
 sudo chmod a+rw /dev/ttyUSB0
 ```
+### requirement
+ros  
+RosAria  
+python2  
 
 ### useful link
-AriaCoda  
+1. AriaCoda  
 https://github.com/reedhedges/AriaCoda
 
-How to use C++ class in python ( SWIG C++/Python: inheritance proxy objects )  
+2. How to use C++ class in python ( SWIG C++/Python: inheritance proxy objects )  
 https://stackoverflow.com/questions/25962662/swig-c-python-inheritance-proxy-objects
 
-RosAria Client  
+3. RosAria Client  
 https://github.com/pengtang/rosaria_client/blob/master/src/teleop.cpp
+
+4. Ros wiki
+http://wiki.ros.org/
+
+### configuration
+IP Address
+```
+raspberry pi : 10.0.0.127
+laptop on p3at : 10.0.0.216
+```
