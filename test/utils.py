@@ -18,20 +18,22 @@ def get_gps():
     path = "./data/" # fix path
     file_list = os.listdir(path) # get file list
     if(len(file_list)<13): # lack of gps data
-        return None,None # return None
+        return None,None,hd # return None
     file_list.sort()# find oldest file
     lon = 0
     lat = 0
+	hd = 0
     for name in file_list[4:]: # get lon,lat value each file and sum
         f = open("data/" +name, 'r')
         lines = csv.reader(f)
         for line in lines:
             lon += float(line[1])
             lat += float(line[2])
+			hd = float(line[-1])
         f.close()
     lon = lon / len(file_list[4:])
     lat = lat / len(file_list[4:])
-    return lon, lat #get avg gps data
+    return lon, lat,hd #get avg gps data
 
 # http://egloos.zum.com/metashower/v/313035
 # https://lovestudycom.tistory.com/entry/%EC%9C%84%EB%8F%84-%EA%B2%BD%EB%8F%84-%EA%B3%84%EC%82%B0%EB%B2%95
