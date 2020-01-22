@@ -27,6 +27,7 @@ class PyPose(ArPose):
 
 robot = None             # P3-AT Robot
 FLAGS = None             # server ip address and connection port
+stop_flag = False
 GPS_list = Queue.Queue() # commander GPS list
 
 # TODO : Make this var to parameter
@@ -57,6 +58,7 @@ if __name__ == '__main__':
             self.GPS_list = GPS_list
 
         def run(self):
+            # global stop_flag
             recv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             recv_socket.bind((FLAGS.ip,FLAGS.port))
             recv_socket.listen(5)
@@ -65,6 +67,10 @@ if __name__ == '__main__':
             while True:
                 data = client_socket.recv(1024)
                 ex, ey = data.decode().split()
+                decoded_data = (float(ex),float(ey))
+                if decoded_data == (-1,-1):
+                    stop_flag = True
+                    
                 print("########## Packet received ##########")
                 print("LAT :", ex, "LON :", ey)
                 GPS_list.put((float(ex),float(ey)))
@@ -179,6 +185,10 @@ if __name__ == '__main__':
 
             while True:
                 robot.lock()
+                if stop_flag:
+                    with GPS_list.mutex:
+                        GPS_list.queue.clear()
+                    gotoPoseAction.cancelGoal()
                 if first or gotoPoseAction.haveAchievedGoal():
                     # Move first time and correct until the set number is reached.
                     if count == goal_num:
