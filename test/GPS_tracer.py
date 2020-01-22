@@ -1,11 +1,10 @@
+from __future__ import division
 import sys
 import socket
 import argparse
 import Queue
 import time
-from __future__ import division
 from AriaPy import *
-from time import sleep
 from utils import get_gps, calc_gps, gps2pose, get_gps
 from threading import Thread
 
@@ -58,7 +57,7 @@ if __name__ == '__main__':
             self.GPS_list = GPS_list
 
         def run(self):
-            # global stop_flag
+            global stop_flag
             recv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             recv_socket.bind((FLAGS.ip,FLAGS.port))
             recv_socket.listen(5)
@@ -68,8 +67,10 @@ if __name__ == '__main__':
                 data = client_socket.recv(1024)
                 ex, ey = data.decode().split()
                 decoded_data = (float(ex),float(ey))
-                if decoded_data == (-1,-1):
+                if decoded_data == (-1.0,-1.0):
+                    print("############# recv stop packet ##########")
                     stop_flag = True
+                    continue
                     
                 print("########## Packet received ##########")
                 print("LAT :", ex, "LON :", ey)
@@ -99,7 +100,7 @@ if __name__ == '__main__':
         Aria.exit(1)
 
     sonar = ArSonarDevice()
-    robot.addSensorInterpTask(printRobotPos)
+    # robot.addSensorInterpTask(printRobotPos)
     robot.addRangeDevice(sonar)
     robot.runAsync(True)
 
@@ -152,7 +153,7 @@ if __name__ == '__main__':
             while GPS_list.empty():
                 robot.unlock()
                 ArUtil.sleep(500)
-                # print(GPS_list.empty())
+                print(GPS_list.empty())
                 robot.lock()
             
             print("GPS list is not empty")
@@ -160,9 +161,6 @@ if __name__ == '__main__':
             lat2, lon2 = GPS_list.get()
             GPS_list.task_done()
             
-            if (lat2, lon2) == (-1,-1):
-                print("exit")
-                break
 
             # TODO robot_state 
             if gps_mode:	 
@@ -185,10 +183,13 @@ if __name__ == '__main__':
 
             while True:
                 robot.lock()
+                print("stop_flag", stop_flag)
                 if stop_flag:
+                    print("############# stop ##########")
                     with GPS_list.mutex:
                         GPS_list.queue.clear()
                     gotoPoseAction.cancelGoal()
+                    stop_flag = False
                 if first or gotoPoseAction.haveAchievedGoal():
                     # Move first time and correct until the set number is reached.
                     if count == goal_num:
