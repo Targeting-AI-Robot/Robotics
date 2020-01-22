@@ -1,17 +1,17 @@
-from __future__ import division
-from AriaPy import *
 import sys
 import socket
 import argparse
+import Queue
+import time
+from __future__ import division
+from AriaPy import *
 from time import sleep
 from utils import get_gps, calc_gps, gps2pose, get_gps
 from threading import Thread
-import Queue
-import time
 
-##############
-# initalize  #
-##############
+#############################
+# C++ class to Python class #
+#############################
 
 class PyTime(ArTime):
     def __init__(self):
@@ -25,73 +25,33 @@ class PyPose(ArPose):
 # global variables #
 ####################
 
-robot = None
-FLAGS = None
-GPS_list = Queue.Queue()
-#GPS_list.put((500.0, 0.0))
-#GPS_list.put((1000, 0))
-#GPS_list.put((0.0, 0.0))
-#GPS_list.put((0.000005, 0))
-#GPS_list.put((0.00001, 0))
-#GPS_list.put((0, 0))
+robot = None             # P3-AT Robot
+FLAGS = None             # server ip address and connection port
+GPS_list = Queue.Queue() # commander GPS list
 
 # TODO : Make this var to parameter
-goal_num = 2
-gps_mode = False
+goal_num = 2             # modification count
+gps_mode = False         # choose GPS point or 'mm' coordinates
 
-
-################
-# init for GPS #
-################
-
-# Are you using these, Mr.Lee = None
-
-####################
-# define functions #
-####################
-
-def printRobotPos():
-    print(robot.getPose())
-
-def recv_gps(GPS_list):
-    recv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    recv_socket.bind((FLAGS.ip,FLAGS.port))
-    recv_socket.listen(5)
-    client_socket,_ = recv_socket.accept()
-
-    while True:
-        data = client_socket.recv(1024)
-        ex, ey = data.decode().split()
-        print("##################recv packet :",(float(ex),float(ey)))
-        print("try to put")
-        GPS_list.put((float(ex),float(ey)))
-        print("put gps list done")
-
-########
-# Main #
-########
+#####################
+# Start Main Thread #
+#####################
 
 if __name__ == '__main__':
-    ####################
-    # Start GPS Thread #
-    ####################
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-i','--ip',type=str,default='10.0.0.216')
     parser.add_argument('-p','--port',type=int,default=9000)
     FLAGS,_ = parser.parse_known_args()
 
-    #receiving_gps = Thread(target=recv_gps, args=(GPS_list,))
-    #receiving_gps.start()
-
-    ##################
-    # Robot Movement #
-    ##################
+    ###########################
+    # Aria library initialize #
+    ###########################
 
     Aria.init()
 
+    # receiving GPS point from commander
     class ReceiveGPSThread(Thread):
-        
+
         def __init__(self, GPS_list):
             Thread.__init__(self)
             self.GPS_list = GPS_list
@@ -105,14 +65,21 @@ if __name__ == '__main__':
             while True:
                 data = client_socket.recv(1024)
                 ex, ey = data.decode().split()
-                print("##################recv packet :",(float(ex),float(ey)))
-                print("try to put")
-                self.GPS_list.put((float(ex),float(ey)))
-                print("put gps list done")
+                print("########## Packet received ##########")
+                print("LAT :", ex, "LON :", ey)
+                GPS_list.put((float(ex),float(ey)))
+
+    ####################
+    # Start GPS Thread #
+    ####################
 
     receiveThread = ReceiveGPSThread(GPS_list)
     receiveThread.start()
 
+    ##################
+    # Robot settings #
+    ##################
+    
     parser = ArArgumentParser(sys.argv)
     parser.loadDefaultArguments()
     robot = ArRobot()
@@ -159,31 +126,31 @@ if __name__ == '__main__':
 
     robot.enableMotors()
     robot.comInt(ArCommands.SOUNDTOG, 0)
-    duration = 30000
 
     start = PyTime()
     start.setToNow()
 
-
+    ##################
+    # Robot Movement #
+    ##################
+    
     try: 
         while Aria.getRunning():
-            print("start loop")
+            print("Start robot moving loop")
             robot.lock()
+
             # sleep while there is no gps to go or robot is moving
             print("robot has achieved")
             print("GPS empty?",GPS_list.empty())
 
             while GPS_list.empty():
                 robot.unlock()
-                #pass
-                #ArUtil.sleep(10)
                 ArUtil.sleep(500)
-                print(GPS_list.empty())
+                # print(GPS_list.empty())
                 robot.lock()
             
             print("GPS list is not empty")
             first = False
-            # sx, sy, cur_theta = get_gps()
             lat2, lon2 = GPS_list.get()
             GPS_list.task_done()
             
@@ -191,7 +158,8 @@ if __name__ == '__main__':
                 print("exit")
                 break
 
-            if gps_mode:	# TODO robot_state  
+            # TODO robot_state 
+            if gps_mode:	 
                 #lat1, lon1, base_heading = get_gps()	
                 lat1, lon1, base_heading = 0,0,0	
                 ex, ey = gps2pose(lat1, lon1, lat2, lon2, base_heading)	
@@ -199,11 +167,11 @@ if __name__ == '__main__':
                 ex, ey = lat2, lon2	
                 
             #dist, dtheta = calc_gps(sx, sy, ex, ey)
-            print("calculated pose", type(ex), ex, type(ey), ey)
+            print("Calculated pose     -> X :", ex, "Y :", ey)
             pose = PyPose()
             pose.setPose(ex, ey)
 
-            print("running now")
+            print("Running now...")
             count = 0
             
             first = True
@@ -211,8 +179,8 @@ if __name__ == '__main__':
 
             while True:
                 robot.lock()
-                print("if boolean:",first, gotoPoseAction.haveAchievedGoal())
                 if first or gotoPoseAction.haveAchievedGoal():
+                    # Move first time and correct until the set number is reached.
                     if count == goal_num:
                         break
 
@@ -220,25 +188,23 @@ if __name__ == '__main__':
                     print("run count", count)
                     count += 1
             
-                    print("achieved:",gotoPoseAction.haveAchievedGoal())
-                    print("pose",robot.getX(),robot.getY())
-                    print("set goal of robot",pose.getX(), pose.getY())
+                    print("Achieved:",gotoPoseAction.haveAchievedGoal())
+                    print("Current robot pose  -> X :",robot.getX(),"Y :",robot.getY())
+                    print("Set next robot goal -> X :",pose.getX(),"Y :", pose.getY())
+                    
+                    # Setting goal of robot
                     gotoPoseAction.setGoal(pose)
                     
-                print("unlock robot")
+                print("Current robot pose  -> X :",robot.getX(),"Y :",robot.getY())
                 robot.unlock()
-                # ArUtil.sleep(500)
                 ArUtil.sleep(500)
                 
 
             robot.unlock()
             ArUtil.sleep(500)
-            print("end one loop")
+            print("End one loop")
 
     except:
         Aria.exit(0)
-
-    # receiving_gps.join()
-    # GPS_list.join()
 
     Aria.exit(0)
