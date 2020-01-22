@@ -35,3 +35,10 @@ https://github.com/pengtang/rosaria_client/blob/master/src/teleop.cpp
 
 4. Ros wiki
 http://wiki.ros.org/
+
+### configuration
+IP Address
+```
+raspberry pi : 10.0.0.127
+laptop on p3at : 10.0.0.216
+```
