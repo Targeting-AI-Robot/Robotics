@@ -142,19 +142,28 @@ if __name__ == '__main__':
     ##################
     # Robot Movement #
     ##################
-    
+    op_first = True
     try: 
         while Aria.getRunning():
             print("Start robot moving loop")
             robot.lock()
             lat1, lon1, base_heading = None, None, None
+            if not op_first and gps_mode:
+                print("Robot stop for other process...")
+                for _ in range(13):
+                    robot.unlock()
+                    ArUtil.sleep(1000)
+                    robot.lock()
+            op_first = False
+            print("Robot ready to move")
             while gps_mode and lat1 is None:	 
                 lat1, lon1, base_heading = get_gps()
+            if gps_mode:
                 print("########## GPS point of robot",lat1, lon1, base_heading)
-                
+            else:
+                print("########## pose of robot",robot.getX(), robot.getY())
             
             # sleep while there is no gps to go or robot is moving
-            print("robot has achieved")
             print("is GPS list empty?", len(GPS_list) == 0)
 
             while not GPS_list:
@@ -188,7 +197,8 @@ if __name__ == '__main__':
 
             while True:
                 robot.lock()
-                print("stop_flag", arg_dict['stop_flag'])
+                print("first and achieved?", first, gotoPoseAction.haveAchievedGoal())
+                #print("stop_flag", arg_dict['stop_flag'])
                 if arg_dict['stop_flag']:
                     print("############# stop ##########")
                     del GPS_list[:]
