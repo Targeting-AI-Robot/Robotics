@@ -8,10 +8,10 @@ def receive():
     #print("create socket")
     receive.bind(('',8081))
     while(True):
-        file_len = len(os.walk('/home/lee/gps/data').next()[2])# fix path
+        file_len = len(os.walk('/home/ai/Desktop/data').next()[2])# fix path
         directory = []
         if(file_len>100):# remove oldest data file
-            files_path = '/home/lee/gps/data/'#fix path
+            files_path = '/home/ai/Desktop/data/'#fix path
             directory = os.listdir(files_path)
             directory.sort()
             #print(directory[0])
