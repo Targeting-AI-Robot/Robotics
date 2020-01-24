@@ -148,6 +148,9 @@ if __name__ == '__main__':
 
             # sleep while there is no gps to go or robot is moving
             print("robot has achieved")
+            print("robot stop...")
+            ArUtil.sleep(13000)
+            print("robot recv packet for GPS")
             print("GPS empty?",GPS_list.empty())
 
             while GPS_list.empty():

@@ -39,6 +39,11 @@ http://wiki.ros.org/
 ### configuration
 IP Address
 ```
+WIFI
 raspberry pi : 10.0.0.127
 laptop on p3at : 10.0.0.216
+
+Ethernet Connection between raspberry pi and laptop(on p3at)
+raspberry pi : 169.254.0.216
+laptop : 169.254.0.127
 ```
