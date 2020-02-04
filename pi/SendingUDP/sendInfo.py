@@ -14,10 +14,10 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 ########## GPS values parsing ##########
 gpsd = gps(mode=WATCH_ENABLE|WATCH_NEWSTYLE) 
 
-sock.bind(('', 8081))
+sock.bind(('', 8082))
 
 SEND_IP = '192.168.2.216'
-SEND_PORT = 8081
+SEND_PORT = 8082
 
 def TPVParser():
     report = gpsd.next() #

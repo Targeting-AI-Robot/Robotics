@@ -5,7 +5,7 @@ import argparse
 import Queue
 import time
 from AriaPy import *
-from utils import get_gps, calc_gps, gps2pose, get_gps
+from utils import get_gps, calc_gps, gps2pose
 from multiprocessing import Process, Manager
 #from threading import Thread
 
