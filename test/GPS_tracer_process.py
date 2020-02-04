@@ -34,18 +34,19 @@ arg_dict = manager.dict({'stop_flag': False})
 
 # TODO : Make this var to parameter
 goal_num = 2             # modification count
-gps_mode = False         # choose GPS point or 'mm' coordinates
+gps_mode = True         # choose GPS point or 'mm' coordinates
+#gps_mode = False         # choose GPS point or 'mm' coordinates
 
 def recv_gps():
     recv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    recv_socket.bind((FLAGS.ip,FLAGS.port))
+    recv_socket.bind(('0.0.0.0',FLAGS.port))
     recv_socket.listen(5)
     client_socket,_ = recv_socket.accept()
 
     while True:
         data = client_socket.recv(1024)
         decoded = data.decode().split()
-        if len(decoded) > 2:
+        if len(decoded) < 2 or len(decoded) > 3:
             continue
                 
         ex, ey = decoded
