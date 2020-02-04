@@ -4,14 +4,20 @@ import time
 import os
     
 def receive():
+    files_path = '/home/ai/Desktop/Robotics/test/data/'
+	file_list = os.listdir(files_path)
+	if len(file_list)!=0:
+	    for a in file_list:
+		    os.remove(files_path+a)
+    
     receive = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     #print("create socket")
     receive.bind(('',8081))
     while(True):
-        file_len = len(os.walk('/home/ai/Desktop/data').next()[2])# fix path
+        file_len = len(os.walk('/home/ai/Desktop/Robotics/data').next()[2])# fix path
         directory = []
         if(file_len>100):# remove oldest data file
-            files_path = '/home/ai/Desktop/data/'#fix path
+            files_path = '/home/ai/Desktop/Robotics/data/'#fix path
             directory = os.listdir(files_path)
             directory.sort()
             #print(directory[0])
