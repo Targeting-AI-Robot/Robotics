@@ -57,12 +57,12 @@ MAG_MEDIANTABLESIZE = 9     # Median filter table size for magnetometer. Higher 
 # Calibrating the compass isnt mandatory, however a calibrated 
 # compass will result in a more accurate heading value.
 
-magXmin =  -468
-magYmin =  -439
-magZmin =  -1534
-magXmax =  1751
-magYmax =  1817
-magZmax =  979
+magXmin =  -251
+magYmin =  -879
+magZmin =  -1533
+magXmax =  2139
+magYmax =  1494
+magZmax =  1126
 
 oldXMagRawValue = 0
 oldYMagRawValue = 0
