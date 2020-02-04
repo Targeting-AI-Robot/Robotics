@@ -39,7 +39,7 @@ gps_mode = True         # choose GPS point or 'mm' coordinates
 
 def recv_gps():
     recv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    recv_socket.bind(('0.0.0.0',FLAGS.port))
+    recv_socket.bind((FLAGS.ip,FLAGS.port))
     recv_socket.listen(5)
     client_socket,_ = recv_socket.accept()
 
@@ -69,7 +69,7 @@ def recv_gps():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i','--ip',type=str,default='10.0.0.216')
+    parser.add_argument('-i','--ip',type=str,default='0.0.0.0')
     parser.add_argument('-p','--port',type=int,default=9000)
     FLAGS,_ = parser.parse_known_args()
 
