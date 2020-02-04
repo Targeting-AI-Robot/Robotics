@@ -9,6 +9,7 @@ def receive():
     if len(file_list)!=0:
         for a in file_list:
             os.remove(files_path+a)
+
     receive = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     #print("create socket")
     receive.bind(('',8082))
