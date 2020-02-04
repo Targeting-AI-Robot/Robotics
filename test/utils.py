@@ -15,15 +15,16 @@ def recv_GPS(ip, port):
         data = client_socket.recv(65535)
 
 def get_gps():
+    file_num = 5
     path = "./data/" # fix path
     file_list = os.listdir(path) # get file list
-    if(len(file_list)<13): # lack of gps data
+    if(len(file_list)<file_num): # lack of gps data
         return None,None,None # return None
     file_list.sort()# find oldest file
     lon = 0
     lat = 0
     hd = 0
-    for name in file_list[4:]: # get lon,lat value each file and sum
+    for name in file_list[-file_num:]: # get lon,lat value each file and sum
         f = open("data/" +name, 'r')
         lines = csv.reader(f)
         for line in lines:
@@ -31,8 +32,8 @@ def get_gps():
             lat += float(line[2])
             hd = float(line[-1])
         f.close()
-    lon = lon / len(file_list[4:])
-    lat = lat / len(file_list[4:])
+    lon = lon / len(file_list[-file_num:])
+    lat = lat / len(file_list[-file_num:])
     return lon, lat, hd #get avg gps data
 
 # http://egloos.zum.com/metashower/v/313035
@@ -85,4 +86,5 @@ def gps2pose(lat1, lon1, lat2, lon2, base_heading):
 
 
 if __name__ == '__main__':
-    print(gps2pose(0, 0, 1, 0, 0))
+    #print(gps2pose(0, 0, 1, 0, 0))
+    print(get_gps())
