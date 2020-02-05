@@ -182,6 +182,8 @@ if __name__ == '__main__':
                 #print("##########",lat1, lon1, base_heading)
                 #lat1, lon1, base_heading = 0,0,0	
                 ex, ey = gps2pose(lat1, lon1, lat2, lon2, base_heading)	
+                ex += robot.getX()
+                ey += robot.getY()
             else:	
                 ex, ey = lat2, lon2	
                 
