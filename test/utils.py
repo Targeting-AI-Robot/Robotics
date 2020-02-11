@@ -73,11 +73,17 @@ def main():
     t.start()
 
     t.join()
+    
+#mili meter and degree
+def gps2dd(lat1, lon1, lat2, lon2, base_heading):
+    dist, heading = calc_gps(lat1, lon1, lat2, lon2)
+    theta = heading - base_heading
+    return dist*1000, theta    
 
-def gps2pose(lat1, lon1, lat2, lon2, base_heading):
+def gps2pose(lat1, lon1, lat2, lon2, diff):
     dist, heading = calc_gps(lat1, lon1, lat2, lon2)
     print("dist",dist)
-    theta = heading - base_heading
+    theta = heading - diff
 
     theta = deg2rad(theta)
     # meter to millimeter
