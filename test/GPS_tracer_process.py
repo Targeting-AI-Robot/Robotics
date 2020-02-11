@@ -183,7 +183,8 @@ if __name__ == '__main__':
                 #lat1, lon1, base_heading = get_gps()
                 #print("##########",lat1, lon1, base_heading)
                 #lat1, lon1, base_heading = 0,0,0	
-                ex, ey = gps2pose(lat1, lon1, lat2, lon2, diff)	
+                ex, ey = gps2pose(lat1, lon1, lat2, lon2, diff)
+                print("diff", diff)	
                 ex += robot.getX()
                 ey += robot.getY()
             else:	

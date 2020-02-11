@@ -78,12 +78,17 @@ def main():
 def gps2dd(lat1, lon1, lat2, lon2, base_heading):
     dist, heading = calc_gps(lat1, lon1, lat2, lon2)
     theta = heading - base_heading
+    print("calc done")
     return dist*1000, theta    
 
 def gps2pose(lat1, lon1, lat2, lon2, diff):
     dist, heading = calc_gps(lat1, lon1, lat2, lon2)
     print("dist",dist)
+    print("heading",heading)
+
     theta = heading - diff
+
+    print("theta",theta)
 
     theta = deg2rad(theta)
     # meter to millimeter

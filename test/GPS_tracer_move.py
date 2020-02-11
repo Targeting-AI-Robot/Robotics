@@ -5,7 +5,7 @@ import argparse
 import Queue
 import time
 from AriaPy import *
-from utils import get_gps, calc_gps, gps2pose
+from utils import get_gps, calc_gps, gps2pose, gps2dd
 from multiprocessing import Process, Manager
 #from threading import Thread
 
@@ -123,9 +123,6 @@ if __name__ == '__main__':
     robot.addAction(limiter, 95)
     robot.addAction(limiterFar, 90)
 
-    gotoPoseAction = ArActionGotoStraight("gotostraight")
-    robot.addAction(gotoPoseAction, 50)
-
     stop = ArActionStop("stop")
     robot.addAction(stop, 40)
 
@@ -153,7 +150,7 @@ if __name__ == '__main__':
                     robot.lock()
             op_first = False
             print("Robot ready to move")
-            while gps_mode and lat1 is None:	 
+            while lat1 is None:	 
                 lat1, lon1, base_heading = get_gps()
          
             print("########## GPS point of robot",lat1, lon1, base_heading)
@@ -168,22 +165,26 @@ if __name__ == '__main__':
             
             print("GPS point received")
             lat2, lon2 = GPS_list.pop(0)
-
+            print("calc to dd")
             # TODO robot_state             	 
             dist, theta = gps2dd(lat1, lon1, lat2, lon2, base_heading)
-            
+            print(dist, theta)
             print("Running now...")
     
             # Setting goal of robot
-            gotoPoseAction.setGoal(pose)
+            #gotoPoseAction.setGoal(pose)
             robot.setHeading(robot.getTh() - theta)
             robot.unlock()
-            ArUtil_sleep(3000)
+            ArUtil_sleep(5000)
             robot.lock()
             robot.move(dist)
-            ArUtil_sleep(3000)
+            ArUtil_sleep(5000)
             robot.unlock()
+            ArUtil_sleep(500)
+            robot.lock()
+
             while robot.getVel() != 0:
+                robot.unlock()
                 ArUtil_sleep(500)
                 robot.lock()
                 # Move until stop.
@@ -195,9 +196,7 @@ if __name__ == '__main__':
                     arg_dict['stop_flag'] = False
                     robot.unlock()
                     break
-                robot.unlock()
                 
-            robot.lock()
             print("Current robot pose  -> X :",robot.getX(),"Y :",robot.getY())
             robot.unlock()
             ArUtil.sleep(500)
