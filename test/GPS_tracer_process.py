@@ -149,6 +149,7 @@ if __name__ == '__main__':
             print("Start robot moving loop")
             robot.lock()
             lat1, lon1, base_heading = None, None, None
+            diff = None
             if not op_first and gps_mode:
                 print("Robot stop for other process...")
                 for _ in range(13):
@@ -159,6 +160,7 @@ if __name__ == '__main__':
             print("Robot ready to move")
             while gps_mode and lat1 is None:	 
                 lat1, lon1, base_heading = get_gps()
+                diff = base_heading + robot.getTh()
             if gps_mode:
                 print("########## GPS point of robot",lat1, lon1, base_heading)
             else:
@@ -181,7 +183,7 @@ if __name__ == '__main__':
                 #lat1, lon1, base_heading = get_gps()
                 #print("##########",lat1, lon1, base_heading)
                 #lat1, lon1, base_heading = 0,0,0	
-                ex, ey = gps2pose(lat1, lon1, lat2, lon2, base_heading)	
+                ex, ey = gps2pose(lat1, lon1, lat2, lon2, diff)	
                 ex += robot.getX()
                 ey += robot.getY()
             else:	
