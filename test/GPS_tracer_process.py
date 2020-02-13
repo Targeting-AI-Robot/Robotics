@@ -150,8 +150,17 @@ if __name__ == '__main__':
             robot.lock()
             lat1, lon1, base_heading = None, None, None
             diff = None
+
+            #############
+            #  detect   #
+            #############
             if not op_first and gps_mode:
                 print("Robot stop for other process...")
+
+                for _ in range(8):
+                    turn_and_take(robot)
+                detect()
+                
                 for _ in range(13):
                     robot.unlock()
                     ArUtil.sleep(1000)
