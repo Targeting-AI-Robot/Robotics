@@ -63,6 +63,23 @@ def recv_gps():
         GPS_list.append((float(ex),float(ey)))
         print("size of GPS_list", len(GPS_list))
 
+
+def turn_and_take(robot):
+    # rotate 45
+    robot.setHeading(robot.getTh() + 45)
+    robot.unlock()
+    ArUtil.sleep(3000)
+    robot.lock()
+
+    # send command to take picture
+    # make function in utils.py and use it
+    
+    
+def detect():
+    # take one picture using segmentation and depth to return gps
+    # make function in utils.py and use it
+    return enermy_gps()
+
 #####################
 # Start Main Thread #
 #####################
