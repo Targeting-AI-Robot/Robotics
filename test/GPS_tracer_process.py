@@ -76,6 +76,7 @@ def recvall(sock, count):
 def recv_img():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect(('192.168.2.170', 8282)) # Address must be changed later
+	num = 0
 
     while True:
         # send request by flag
@@ -85,12 +86,19 @@ def recv_img():
             stringData = recvall(sock, int(length))
             data = np.fromstring(stringData, dtype='uint8')
             
-            # At now, just show the img
-            decimg = cv2.imdecode(data,1)
-            cv2.imshow('window', decimg)
-            cv2.imwrite('testImg.jpg', decimg)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+			decimg1 = cv2.imdecode(data,1)
+			
+			length = recvall(sock, 16)
+            stringData = recvall(sock, int(length))
+            data = np.fromstring(stringData, dtype='uint8')
+			
+            decimg2 = cv2.imdecode(data,1)
+            
+            cv2.imwrite('test/image/image_' + num + '_L.png', decimg1)
+			cv2.imwrite('test/image/image_' + num + '_R.png', decimg2)
+			num = (num + 1) % 8
+            
+            
 
 def turn_and_take(robot):
     # rotate 45
