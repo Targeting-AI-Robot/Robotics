@@ -4,6 +4,7 @@ import socket
 import argparse
 import Queue
 import time
+import numpy as np
 from AriaPy import *
 from utils import get_gps, calc_gps, gps2pose
 from multiprocessing import Process, Manager
@@ -30,7 +31,7 @@ FLAGS = None             # server ip address and connection port
 #GPS_list = Queue.Queue() # commander GPS list
 manager = Manager()
 GPS_list = manager.list()
-arg_dict = manager.dict({'stop_flag': False})
+arg_dict = manager.dict({'stop_flag': False, 'img_flag': True})
 
 # TODO : Make this var to parameter
 goal_num = 2             # modification count
@@ -63,6 +64,33 @@ def recv_gps():
         GPS_list.append((float(ex),float(ey)))
         print("size of GPS_list", len(GPS_list))
 
+def recvall(sock, count):
+    buf = b''
+    while count:
+        newbuf = sock.recv(count)
+        if not newbuf: return None
+        buf += newbuf
+        count -= len(newbuf)
+    return buf
+		
+def recv_img():
+	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	sock.connect(('192.168.2.170', 8282)) # Address must be changed later
+	
+	while True:
+		# send request by flag
+		if(arg_dict['img_flag']):
+			sock.send('req'.encode())
+			length = recvall(sock, 16)
+			stringData = recvall(sock, int(length))
+			data = np.fromstring(stringData, dtype='uint8')
+			
+			# At now, just show the img
+			decimg = cv2.imdecode(data,1)
+			cv2.imshow('window', decimg)
+			cv2.imwrite('testImg.jpg', decimg)
+			cv2.waitKey(0)
+			cv2.destroyAllWindows()
 
 def turn_and_take(robot):
     # rotate 45
@@ -102,6 +130,13 @@ if __name__ == '__main__':
 
     recv_gps_proc = Process(target=recv_gps)
     recv_gps_proc.start()
+	
+	#############################
+    # Start img receiver Thread #
+    #############################
+	
+	recv_img_proc = Process(target=recv_img)
+    recv_img_proc.start()
 
     ##################
     # Robot settings #
