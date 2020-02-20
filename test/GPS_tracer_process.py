@@ -31,7 +31,7 @@ FLAGS = None             # server ip address and connection port
 #GPS_list = Queue.Queue() # commander GPS list
 manager = Manager()
 GPS_list = manager.list()
-arg_dict = manager.dict({'stop_flag': False, 'img_flag': True})
+arg_dict = manager.dict({'stop_flag': False, 'img_flag': False})
 
 # TODO : Make this var to parameter
 goal_num = 2             # modification count
@@ -96,7 +96,9 @@ def recv_img():
             
             cv2.imwrite('test/image/image_' + num + '_L.png', decimg1)
             cv2.imwrite('test/image/image_' + num + '_R.png', decimg2)
+            
             num = (num + 1) % 8
+            arg_dict['img_flag'] = False;
             
             
 
