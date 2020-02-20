@@ -5,7 +5,7 @@ import argparse
 import Queue
 import time
 from AriaPy import *
-from utils import get_gps, calc_gps, gps2pose
+from utils import get_gps, calc_gps, gps2pose, enermy_gps
 from multiprocessing import Process, Manager
 #from threading import Thread
 
@@ -64,16 +64,20 @@ def recv_gps():
         print("size of GPS_list", len(GPS_list))
 
 
-def turn_and_take(robot):
+def turn_and_take(robot, num, heading):
     # rotate 45
     robot.setHeading(robot.getTh() + 45)
     robot.unlock()
     ArUtil.sleep(3000)
     robot.lock()
 
-    # send command to take picture
-    # make function in utils.py and use it
-    
+    # send command to take picture  (make function in utils.py and use it)
+    # and wait
+    # if raspberry pi complete to take picture,
+    # recv that picture.
+
+    # implement heading recv function
+    # heading 
     
 def detect():
     # take one picture using segmentation and depth to return gps
@@ -174,8 +178,10 @@ if __name__ == '__main__':
             if not op_first and gps_mode:
                 print("Robot stop for other process...")
 
-                for _ in range(8):
-                    turn_and_take(robot)
+                # get heading
+                heading = None
+                for i in range(8):
+                    turn_and_take(robot, i, heading)
                 detect()
                 
                 for _ in range(13):
