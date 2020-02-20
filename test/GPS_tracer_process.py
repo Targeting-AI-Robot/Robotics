@@ -72,25 +72,25 @@ def recvall(sock, count):
         buf += newbuf
         count -= len(newbuf)
     return buf
-		
+        
 def recv_img():
-	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	sock.connect(('192.168.2.170', 8282)) # Address must be changed later
-	
-	while True:
-		# send request by flag
-		if(arg_dict['img_flag']):
-			sock.send('req'.encode())
-			length = recvall(sock, 16)
-			stringData = recvall(sock, int(length))
-			data = np.fromstring(stringData, dtype='uint8')
-			
-			# At now, just show the img
-			decimg = cv2.imdecode(data,1)
-			cv2.imshow('window', decimg)
-			cv2.imwrite('testImg.jpg', decimg)
-			cv2.waitKey(0)
-			cv2.destroyAllWindows()
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect(('192.168.2.170', 8282)) # Address must be changed later
+
+    while True:
+        # send request by flag
+        if(arg_dict['img_flag']):
+            sock.send('req'.encode())
+            length = recvall(sock, 16)
+            stringData = recvall(sock, int(length))
+            data = np.fromstring(stringData, dtype='uint8')
+            
+            # At now, just show the img
+            decimg = cv2.imdecode(data,1)
+            cv2.imshow('window', decimg)
+            cv2.imwrite('testImg.jpg', decimg)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
 def turn_and_take(robot):
     # rotate 45
@@ -130,12 +130,12 @@ if __name__ == '__main__':
 
     recv_gps_proc = Process(target=recv_gps)
     recv_gps_proc.start()
-	
-	#############################
+    
+    #############################
     # Start img receiver Thread #
     #############################
-	
-	recv_img_proc = Process(target=recv_img)
+    
+    recv_img_proc = Process(target=recv_img)
     recv_img_proc.start()
 
     ##################
@@ -219,7 +219,7 @@ if __name__ == '__main__':
                     robot.lock()
             op_first = False
             print("Robot ready to move")
-            while gps_mode and lat1 is None:	 
+            while gps_mode and lat1 is None:     
                 lat1, lon1, base_heading = get_gps()
                 diff = base_heading + robot.getTh()
             if gps_mode:
@@ -240,16 +240,16 @@ if __name__ == '__main__':
             lat2, lon2 = GPS_list.pop(0)
 
             # TODO robot_state 
-            if gps_mode:	 
+            if gps_mode:     
                 #lat1, lon1, base_heading = get_gps()
                 #print("##########",lat1, lon1, base_heading)
-                #lat1, lon1, base_heading = 0,0,0	
+                #lat1, lon1, base_heading = 0,0,0    
                 ex, ey = gps2pose(lat1, lon1, lat2, lon2, diff)
-                print("diff", diff)	
+                print("diff", diff)    
                 ex += robot.getX()
                 ey += robot.getY()
-            else:	
-                ex, ey = lat2, lon2	
+            else:    
+                ex, ey = lat2, lon2    
                 
             #dist, dtheta = calc_gps(sx, sy, ex, ey)
             print("Calculated pose     -> X :", ex, "Y :", ey)
