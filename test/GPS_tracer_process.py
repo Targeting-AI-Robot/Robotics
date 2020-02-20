@@ -4,6 +4,7 @@ import socket
 import argparse
 import Queue
 import time
+import numpy as np
 from AriaPy import *
 from utils import get_gps, calc_gps, gps2pose, enermy_gps
 from multiprocessing import Process, Manager
@@ -30,7 +31,7 @@ FLAGS = None             # server ip address and connection port
 #GPS_list = Queue.Queue() # commander GPS list
 manager = Manager()
 GPS_list = manager.list()
-arg_dict = manager.dict({'stop_flag': False})
+arg_dict = manager.dict({'stop_flag': False, 'img_flag': False})
 
 # TODO : Make this var to parameter
 goal_num = 2             # modification count
@@ -63,6 +64,43 @@ def recv_gps():
         GPS_list.append((float(ex),float(ey)))
         print("size of GPS_list", len(GPS_list))
 
+def recvall(sock, count):
+    buf = b''
+    while count:
+        newbuf = sock.recv(count)
+        if not newbuf: return None
+        buf += newbuf
+        count -= len(newbuf)
+    return buf
+        
+def recv_img():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect(('192.168.2.170', 8282)) # Address must be changed later
+    num = 0
+
+    while True:
+        # send request by flag
+        if(arg_dict['img_flag']):
+            sock.send('req'.encode())
+            length = recvall(sock, 16)
+            stringData = recvall(sock, int(length))
+            data = np.fromstring(stringData, dtype='uint8')
+            
+            decimg1 = cv2.imdecode(data,1)
+            
+            length = recvall(sock, 16)
+            stringData = recvall(sock, int(length))
+            data = np.fromstring(stringData, dtype='uint8')
+            
+            decimg2 = cv2.imdecode(data,1)
+            
+            cv2.imwrite('test/image/image_' + num + '_L.png', decimg1)
+            cv2.imwrite('test/image/image_' + num + '_R.png', decimg2)
+            
+            num = (num + 1) % 8
+            arg_dict['img_flag'] = False;
+            
+            
 
 def turn_and_take(robot, num, heading):
     # rotate 45
@@ -106,6 +144,13 @@ if __name__ == '__main__':
 
     recv_gps_proc = Process(target=recv_gps)
     recv_gps_proc.start()
+    
+    #############################
+    # Start img receiver Thread #
+    #############################
+    
+    recv_img_proc = Process(target=recv_img)
+    recv_img_proc.start()
 
     ##################
     # Robot settings #
@@ -190,7 +235,7 @@ if __name__ == '__main__':
                     robot.lock()
             op_first = False
             print("Robot ready to move")
-            while gps_mode and lat1 is None:	 
+            while gps_mode and lat1 is None:     
                 lat1, lon1, base_heading = get_gps()
                 diff = base_heading + robot.getTh()
             if gps_mode:
@@ -211,16 +256,16 @@ if __name__ == '__main__':
             lat2, lon2 = GPS_list.pop(0)
 
             # TODO robot_state 
-            if gps_mode:	 
+            if gps_mode:     
                 #lat1, lon1, base_heading = get_gps()
                 #print("##########",lat1, lon1, base_heading)
-                #lat1, lon1, base_heading = 0,0,0	
+                #lat1, lon1, base_heading = 0,0,0    
                 ex, ey = gps2pose(lat1, lon1, lat2, lon2, diff)
-                print("diff", diff)	
+                print("diff", diff)    
                 ex += robot.getX()
                 ey += robot.getY()
-            else:	
-                ex, ey = lat2, lon2	
+            else:    
+                ex, ey = lat2, lon2    
                 
             #dist, dtheta = calc_gps(sx, sy, ex, ey)
             print("Calculated pose     -> X :", ex, "Y :", ey)
