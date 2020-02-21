@@ -5,3 +5,5 @@ turn_and_take(robot)
 detect()
 ./image안의 8장의 사진을 모두 세그멘테이션을 실행하고, 그중 가장 많은 픽셀이 나온 사진 선택
 해당 사진의 depth를 구해 방향과 거리로 GPS 계산
+
+python predict.py --image ./CamVid/0001TP_008820.png
