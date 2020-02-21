@@ -33,6 +33,9 @@ def enermy_gps():
     print("selected",selected)
     x_diff = calc_x_diff(selected, file_list, images[selected])
     print(x_diff)
+    
+    # TODO calcate distance and return actual gps point
+    
     return None
 
 def calc_x_diff(selected, file_list, mask):
@@ -51,7 +54,7 @@ def calc_x_diff(selected, file_list, mask):
     out = normxcorr2(template, rgb2gray(right_image), mode="full")
     show3D(out)
     rx, ry = argmax2D(out)
-    return abs(rx - lx)
+    return abs(ry - ly)
 
 def make_template(segmented, left_image):
     
